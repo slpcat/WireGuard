@@ -234,7 +234,9 @@ static inline void queue_encrypt_reset(struct sk_buff_head *queue, struct noise_
 static void begin_parallel_encryption(struct padata_priv *padata)
 {
 	struct encryption_ctx *ctx = container_of(padata, struct encryption_ctx, padata);
+	local_bh_enable();
 	queue_encrypt_reset(&ctx->queue, ctx->keypair);
+	local_bh_disable();
 	padata_do_serial(padata);
 }
 
@@ -362,7 +364,9 @@ static void finish_decrypt_packet(struct decryption_ctx *ctx)
 static void begin_parallel_decryption(struct padata_priv *padata)
 {
 	struct decryption_ctx *ctx = container_of(padata, struct decryption_ctx, padata);
+	local_bh_enable();
 	begin_decrypt_packet(ctx);
+	local_bh_disable();
 	padata_do_serial(padata);
 }
 
