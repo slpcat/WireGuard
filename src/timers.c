@@ -27,7 +27,7 @@ static inline unsigned long slack_time(unsigned long time)
 static void expired_retransmit_handshake(unsigned long ptr)
 {
 	peer_get_from_ptr(ptr);
-	pr_debug("Handshake for peer %Lu (%pISpfsc) did not complete after %d seconds, retrying\n", peer->internal_id, &peer->endpoint.addr, REKEY_TIMEOUT / HZ);
+
 	if (peer->timer_handshake_attempts > MAX_TIMER_HANDSHAKES) {
 		del_timer(&peer->timer_send_keepalive);
 		/* We remove all existing packets and don't try again,
@@ -39,6 +39,8 @@ static void expired_retransmit_handshake(unsigned long ptr)
 			mod_timer(&peer->timer_kill_ephemerals, jiffies + (REJECT_AFTER_TIME * 3));
 		goto out;
 	}
+
+	pr_debug("Handshake for peer %Lu (%pISpfsc) did not complete after %d seconds, retrying\n", peer->internal_id, &peer->endpoint.addr, REKEY_TIMEOUT / HZ);
 
 	/* We clear the endpoint address src address, in case this is the cause of trouble. */
 	socket_clear_peer_endpoint_src(peer);

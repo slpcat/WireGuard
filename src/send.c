@@ -182,6 +182,10 @@ void packet_send_queue(struct wireguard_peer *peer)
 		spin_lock_bh(&peer->tx_packet_queue.lock);
 		skb_queue_splice(&queue, &peer->tx_packet_queue);
 		spin_unlock_bh(&peer->tx_packet_queue.lock);
+		/* If we're queuing up a new packet, and it fails, we should reset the
+		 * handshake attempts counter, so that we have another long period of
+		 * handshake tries. */
+		peer->timer_handshake_attempts = 0;
 
 		packet_queue_handshake_initiation(peer);
 		break;
