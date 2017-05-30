@@ -310,7 +310,7 @@ int packet_create_data(struct sk_buff_head *queue, struct wireguard_peer *peer)
 err_parallel:
 			skb_queue_splice(&ctx->queue, queue);
 			kmem_cache_free(encryption_ctx_cache, ctx);
-			goto err;
+			goto serial_encrypt;
 		}
 	} else
 serial_encrypt:
@@ -393,7 +393,7 @@ void packet_consume_data(struct sk_buff *skb, struct wireguard_device *wg)
 	if (cpumask_weight(cpu_online_mask) > 1) {
 		struct decryption_ctx *ctx = kmem_cache_alloc(decryption_ctx_cache, GFP_ATOMIC);
 		if (unlikely(!ctx))
-			goto err_peer;
+			goto serial_decrypt;
 		ctx->skb = skb;
 		ctx->keypair = keypair;
 		memset(&ctx->padata, 0, sizeof(ctx->padata));
@@ -401,9 +401,10 @@ void packet_consume_data(struct sk_buff *skb, struct wireguard_device *wg)
 		ctx->padata.serial = finish_parallel_decryption;
 		if (unlikely(padata_do_parallel(wg->decrypt_pd, &ctx->padata, choose_cpu(idx)))) {
 			kmem_cache_free(decryption_ctx_cache, ctx);
-			goto err_peer;
+			goto serial_decrypt;
 		}
 	} else
+serial_decrypt:
 #endif
 	{
 		struct decryption_ctx ctx = {
@@ -415,11 +416,6 @@ void packet_consume_data(struct sk_buff *skb, struct wireguard_device *wg)
 	}
 	return;
 
-#ifdef CONFIG_WIREGUARD_PARALLEL
-err_peer:
-	peer_put(keypair->entry.peer);
-	noise_keypair_put(keypair);
-#endif
 err:
 	dev_kfree_skb(skb);
 }
