@@ -42,7 +42,8 @@ int ratelimiter_init(struct ratelimiter *ratelimiter, struct wireguard_device *w
 	memset(ratelimiter, 0, sizeof(struct ratelimiter));
 
 	cfg_init(&ratelimiter->v4_info.cfg, NFPROTO_IPV4);
-	memcpy(ratelimiter->v4_info.name, dev->name, IFNAMSIZ);
+	strncpy(ratelimiter->v4_info.name, dev->name, IFNAMSIZ - 1);
+	ratelimiter->v4_info.name[IFNAMSIZ - 1] = 0;
 	chk.matchinfo = &ratelimiter->v4_info;
 	chk.match = v4_match;
 	chk.family = NFPROTO_IPV4;
@@ -52,7 +53,8 @@ int ratelimiter_init(struct ratelimiter *ratelimiter, struct wireguard_device *w
 
 #if IS_ENABLED(CONFIG_IPV6)
 	cfg_init(&ratelimiter->v6_info.cfg, NFPROTO_IPV6);
-	memcpy(ratelimiter->v6_info.name, dev->name, IFNAMSIZ);
+	strncpy(ratelimiter->v6_info.name, dev->name, IFNAMSIZ - 1);
+	ratelimiter->v6_info.name[IFNAMSIZ - 1] = 0;
 	chk.matchinfo = &ratelimiter->v6_info;
 	chk.match = v6_match;
 	chk.family = NFPROTO_IPV6;
