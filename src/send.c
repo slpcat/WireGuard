@@ -289,7 +289,7 @@ void packet_encryption_worker(struct work_struct *work)
 
 		/* If we have already claimed a packet, work on that one. Otherwise, start looking
 		 * for work at the beginning of the list. */
-		if (!(skb = next ? next : claim_first_packet(&peer->tx_packet_queue, PACKET_TX_INITIALIZED)))
+		if (IS_ERR(skb = next ? next : claim_first_packet(&peer->tx_packet_queue, PACKET_TX_INITIALIZED)))
 			break;
 
 		if (unlikely(!skb_encrypt(skb, PACKET_CB(skb)->keypair, have_simd))) {
@@ -336,7 +336,7 @@ void packet_init_worker(struct work_struct *work)
 
 		/* If we have already claimed a packet, work on that one. Otherwise, start looking
 		 * for work at the beginning of the list. */
-		if (!(skb = next ? next : claim_first_packet(&peer->tx_packet_queue, PACKET_TX_NEW)))
+		if (IS_ERR(skb = next ? next : claim_first_packet(&peer->tx_packet_queue, PACKET_TX_NEW)))
 			break;
 
 		rcu_read_lock_bh();
